@@ -140,8 +140,10 @@ export default function Checkout() {
 
     try {
 
-      // STRIPE PAYMENT
+      // ── STRIPE PAYMENT ────────────────────────────────────────────────────────
       if (paymentMethod === "card") {
+
+        console.log("[Checkout] Starting Stripe session for", items.length, "items");
 
         const response = await fetch(
           "/api/create-checkout-session",
@@ -155,15 +157,18 @@ export default function Checkout() {
 
             body: JSON.stringify({
 
+              // Pass both `name` and `title` so the API handles either field name
               items: items.map((item) => ({
                 name: item.title,
+                title: item.title,
                 price: item.price,
                 quantity: item.quantity,
-                img: item.img,
+                img: item.img || "",
               })),
 
+              // Include ?session_id= so OrderSuccess can fetch session details
               successUrl:
-                `${window.location.origin}/order-success`,
+                `${window.location.origin}/order-success?session_id={CHECKOUT_SESSION_ID}`,
 
               cancelUrl:
                 `${window.location.origin}/checkout`,
@@ -171,28 +176,35 @@ export default function Checkout() {
           }
         );
 
-        const session =
-          await response.json();
+        // Handle non-2xx HTTP responses before parsing JSON
+        if (!response.ok) {
+          const text = await response.text();
+          console.error("[Checkout] API error response:", text);
+          throw new Error(
+            `Server error (${response.status}). Check Vercel env vars.`
+          );
+        }
+
+        const session = await response.json();
+
+        console.log("[Checkout] Session response:", session);
 
         if (session.error) {
           throw new Error(session.error);
         }
 
-        // OPEN STRIPE CARD PAGE
+        // Redirect to Stripe hosted checkout
         if (session.url) {
-
-          window.location.href =
-            session.url;
-
+          window.location.href = session.url;
           return;
         }
 
         throw new Error(
-          "Stripe checkout failed."
+          "Stripe did not return a checkout URL. Check STRIPE_SECRET_KEY in Vercel."
         );
       }
 
-      // CASH ON DELIVERY ONLY
+      // ── CASH ON DELIVERY ──────────────────────────────────────────────────────
       if (paymentMethod === "cod") {
 
         const orderPayload = {
@@ -201,8 +213,9 @@ export default function Checkout() {
           tax,
           total,
           shippingAddress: formData,
-          paymentMethod,
-          status: "pending",
+          deliveryOption: shippingOption,
+          paymentMethod: "cod",
+          status: "pending" as const,
         };
 
         const orderId =
@@ -215,17 +228,20 @@ export default function Checkout() {
           state: {
             orderId,
             total,
+            shippingAddress: formData,
+            items,
+            status: "pending",
           },
         });
       }
 
     } catch (error: any) {
 
-      console.error(error);
+      console.error("[Checkout] Error:", error);
 
       alert(
         error.message ||
-        "Checkout failed."
+        "Checkout failed. Please try again."
       );
 
     } finally {
