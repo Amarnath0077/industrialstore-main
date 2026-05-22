@@ -178,6 +178,7 @@ export default function Checkout() {
           throw new Error(session.error);
         }
 
+        // OPEN STRIPE CARD PAGE
         if (session.url) {
 
           window.location.href =
@@ -185,31 +186,38 @@ export default function Checkout() {
 
           return;
         }
+
+        throw new Error(
+          "Stripe checkout failed."
+        );
       }
 
-      // CASH ON DELIVERY
-      const orderPayload = {
-        items,
-        subtotal,
-        tax,
-        total,
-        shippingAddress: formData,
-        paymentMethod,
-        status: "pending",
-      };
+      // CASH ON DELIVERY ONLY
+      if (paymentMethod === "cod") {
 
-      const orderId =
-        await dbService.placeOrder(
-          user.uid,
-          orderPayload
-        );
-
-      navigate("/order-success", {
-        state: {
-          orderId,
+        const orderPayload = {
+          items,
+          subtotal,
+          tax,
           total,
-        },
-      });
+          shippingAddress: formData,
+          paymentMethod,
+          status: "pending",
+        };
+
+        const orderId =
+          await dbService.placeOrder(
+            user.uid,
+            orderPayload
+          );
+
+        navigate("/order-success", {
+          state: {
+            orderId,
+            total,
+          },
+        });
+      }
 
     } catch (error: any) {
 
