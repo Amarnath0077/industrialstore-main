@@ -147,7 +147,7 @@ export default function Checkout() {
         }
 
         const response = await fetch(
-          "http://localhost:3000/api/create-checkout-session",
+              "/api/create-checkout-session",
           {
             method: "POST",
             headers: {
