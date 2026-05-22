@@ -4,18 +4,18 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-      "dev": "vite",
-      "server": "tsx server.ts",
-      "preview": "vite preview",
-      "build": "vite build && esbuild server.ts --bundle --platform=node --format=cjs --outfile=dist/server.cjs --external:vite",
-      "preview": "vite preview",
-      "clean": "rm -rf dist",
-      "lint": "tsc --noEmit"
+    "dev": "vite",
+    "server": "tsx server.ts",
+    "preview": "vite preview",
+    "build": "vite build",
+    "clean": "rm -rf dist",
+    "lint": "tsc --noEmit"
   },
   "dependencies": {
     "@google/genai": "^1.29.0",
     "@stripe/stripe-js": "^9.4.0",
     "@tailwindcss/vite": "^4.1.14",
+    "@vercel/node": "^5.0.0",
     "@vis.gl/react-google-maps": "^1.8.3",
     "@vitejs/plugin-react": "^5.0.4",
     "cors": "^2.8.6",
