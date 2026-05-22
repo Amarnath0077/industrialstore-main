@@ -182,12 +182,7 @@ export default function Checkout() {
           return;
         }
 
-        await stripe.redirectToCheckout({
-          sessionId: session.id,
-        });
-
-        return;
-      }
+      
 
       // COD / Other Payments
       const orderPayload = {
