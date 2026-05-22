@@ -1,5 +1,7 @@
 {
   "rewrites": [
+    { "source": "/api/get-checkout-session/:sessionId", "destination": "/api/get-checkout-session" },
+    { "source": "/api/(.*)", "destination": "/api/$1" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
