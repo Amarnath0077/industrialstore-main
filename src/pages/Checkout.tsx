@@ -3,7 +3,6 @@ import {
   ShieldCheck,
   Undo2,
   Loader2,
-  User as UserIcon,
   Banknote,
 } from "lucide-react";
 
@@ -13,19 +12,14 @@ import { Link, useNavigate } from "react-router-dom";
 
 import { useState, useEffect } from "react";
 
-import { loadStripe } from "@stripe/stripe-js";
-
 import { useAuth } from "../lib/AuthContext";
 
 import { dbService } from "../lib/dbService";
 
 import { CartItem } from "../lib/types";
 
-const stripePromise = loadStripe(
-  import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || ""
-);
-
 export default function Checkout() {
+
   const navigate = useNavigate();
 
   const { user, login } = useAuth();
@@ -52,19 +46,26 @@ export default function Checkout() {
   });
 
   useEffect(() => {
+
     let unsubscribeFn: any;
 
     const loadData = async () => {
+
       try {
-        unsubscribeFn = dbService.getCartItems(
-          user?.uid || null,
-          (cartItems) => {
-            setItems(cartItems || []);
-            setLoading(false);
-          }
-        );
+
+        unsubscribeFn =
+          dbService.getCartItems(
+            user?.uid || null,
+            (cartItems) => {
+              setItems(cartItems || []);
+              setLoading(false);
+            }
+          );
+
       } catch (err) {
+
         console.error(err);
+
         setLoading(false);
       }
     };
@@ -76,6 +77,7 @@ export default function Checkout() {
         unsubscribeFn();
       }
     };
+
   }, [user]);
 
   const deliveryOptions = [
@@ -113,6 +115,7 @@ export default function Checkout() {
     subtotal + shippingCharge + tax;
 
   const handlePlaceOrder = async () => {
+
     if (!user) {
       alert("Please login first.");
       return;
@@ -136,35 +139,34 @@ export default function Checkout() {
     setPlacing(true);
 
     try {
-      // Stripe Payment
-      if (paymentMethod === "card") {
-        const stripe = await stripePromise;
 
-        if (!stripe) {
-          throw new Error(
-            "Stripe failed to load."
-          );
-        }
+      // STRIPE PAYMENT
+      if (paymentMethod === "card") {
 
         const response = await fetch(
-              "/api/create-checkout-session",
+          "/api/create-checkout-session",
           {
             method: "POST",
+
             headers: {
               "Content-Type":
                 "application/json",
             },
+
             body: JSON.stringify({
+
               items: items.map((item) => ({
-                title: item.title,
+                name: item.title,
                 price: item.price,
                 quantity: item.quantity,
                 img: item.img,
               })),
 
-              successUrl: `${window.location.origin}/order-success`,
+              successUrl:
+                `${window.location.origin}/order-success`,
 
-              cancelUrl: `${window.location.origin}/checkout`,
+              cancelUrl:
+                `${window.location.origin}/checkout`,
             }),
           }
         );
@@ -177,14 +179,15 @@ export default function Checkout() {
         }
 
         if (session.url) {
+
           window.location.href =
             session.url;
+
           return;
         }
+      }
 
-      
-
-      // COD / Other Payments
+      // CASH ON DELIVERY
       const orderPayload = {
         items,
         subtotal,
@@ -207,19 +210,25 @@ export default function Checkout() {
           total,
         },
       });
+
     } catch (error: any) {
+
       console.error(error);
 
       alert(
         error.message ||
-          "Checkout failed."
+        "Checkout failed."
       );
+
     } finally {
+
       setPlacing(false);
+
     }
   };
 
   if (loading) {
+
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="w-12 h-12 animate-spin text-orange-500" />
@@ -229,9 +238,12 @@ export default function Checkout() {
 
   return (
     <div className="min-h-screen bg-gray-100">
+
       {/* Header */}
       <header className="bg-slate-900 text-white py-4 px-6">
+
         <div className="max-w-7xl mx-auto flex justify-between items-center">
+
           <Link
             to="/"
             className="text-3xl font-black"
@@ -240,37 +252,42 @@ export default function Checkout() {
           </Link>
 
           <div className="flex items-center gap-2">
+
             <Lock className="w-5 h-5" />
 
             <span className="font-semibold">
               Secure Checkout
             </span>
+
           </div>
         </div>
       </header>
 
       <main className="max-w-7xl mx-auto py-10 px-4 grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* Left */}
+
+        {/* LEFT */}
         <div className="lg:col-span-8 space-y-8">
-          {/* Shipping */}
+
+          {/* SHIPPING */}
           <motion.section
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             className="bg-white rounded-xl p-6 shadow-sm"
           >
+
             <h2 className="text-2xl font-bold mb-6">
               Shipping Address
             </h2>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
               <input
                 placeholder="Full Name"
                 value={formData.fullName}
                 onChange={(e) =>
                   setFormData({
                     ...formData,
-                    fullName:
-                      e.target.value,
+                    fullName: e.target.value,
                   })
                 }
                 className="border p-3 rounded-lg"
@@ -282,8 +299,7 @@ export default function Checkout() {
                 onChange={(e) =>
                   setFormData({
                     ...formData,
-                    phone:
-                      e.target.value,
+                    phone: e.target.value,
                   })
                 }
                 className="border p-3 rounded-lg"
@@ -295,8 +311,7 @@ export default function Checkout() {
                 onChange={(e) =>
                   setFormData({
                     ...formData,
-                    street:
-                      e.target.value,
+                    street: e.target.value,
                   })
                 }
                 className="border p-3 rounded-lg md:col-span-2"
@@ -308,8 +323,7 @@ export default function Checkout() {
                 onChange={(e) =>
                   setFormData({
                     ...formData,
-                    city:
-                      e.target.value,
+                    city: e.target.value,
                   })
                 }
                 className="border p-3 rounded-lg"
@@ -321,152 +335,144 @@ export default function Checkout() {
                 onChange={(e) =>
                   setFormData({
                     ...formData,
-                    zip:
-                      e.target.value,
+                    zip: e.target.value,
                   })
                 }
                 className="border p-3 rounded-lg"
               />
+
             </div>
           </motion.section>
 
-          {/* Delivery */}
+          {/* DELIVERY */}
           <motion.section
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             className="bg-white rounded-xl p-6 shadow-sm"
           >
+
             <h2 className="text-2xl font-bold mb-6">
               Delivery Options
             </h2>
 
             <div className="space-y-4">
+
               {deliveryOptions.map((opt) => (
+
                 <label
                   key={opt.id}
                   className="flex items-center justify-between border rounded-lg p-4 cursor-pointer"
                 >
+
                   <div className="flex items-center gap-3">
+
                     <input
                       type="radio"
                       checked={
-                        shippingOption ===
-                        opt.id
+                        shippingOption === opt.id
                       }
                       onChange={() =>
-                        setShippingOption(
-                          opt.id
-                        )
+                        setShippingOption(opt.id)
                       }
                     />
 
                     <span className="font-medium">
                       {opt.title}
                     </span>
+
                   </div>
 
                   <span className="font-bold">
                     ${opt.price}
                   </span>
+
                 </label>
               ))}
             </div>
           </motion.section>
 
-          {/* Payment */}
+          {/* PAYMENT */}
           <motion.section
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             className="bg-white rounded-xl p-6 shadow-sm"
           >
+
             <h2 className="text-2xl font-bold mb-6">
               Payment Method
             </h2>
 
             <div className="space-y-4">
+
               <label className="flex items-center gap-3 border p-4 rounded-lg cursor-pointer">
+
                 <input
                   type="radio"
-                  checked={
-                    paymentMethod ===
-                    "card"
-                  }
+                  checked={paymentMethod === "card"}
                   onChange={() =>
-                    setPaymentMethod(
-                      "card"
-                    )
+                    setPaymentMethod("card")
                   }
                 />
 
                 <span className="font-medium">
                   Credit/Debit Card
                 </span>
+
               </label>
 
               <label className="flex items-center gap-3 border p-4 rounded-lg cursor-pointer">
+
                 <input
                   type="radio"
-                  checked={
-                    paymentMethod ===
-                    "cod"
-                  }
+                  checked={paymentMethod === "cod"}
                   onChange={() =>
-                    setPaymentMethod(
-                      "cod"
-                    )
+                    setPaymentMethod("cod")
                   }
                 />
 
                 <div className="flex items-center gap-2">
+
                   <Banknote className="w-5 h-5 text-green-600" />
 
                   <span className="font-medium">
                     Cash on Delivery
                   </span>
+
                 </div>
               </label>
             </div>
           </motion.section>
         </div>
 
-        {/* Right */}
+        {/* RIGHT */}
         <div className="lg:col-span-4">
+
           <aside className="sticky top-24">
+
             <div className="bg-white rounded-xl p-6 shadow-sm">
+
               <h2 className="text-2xl font-bold mb-6">
                 Order Summary
               </h2>
 
               <div className="space-y-3">
-                <div className="flex justify-between">
-                  <span>
-                    Subtotal
-                  </span>
 
+                <div className="flex justify-between">
+                  <span>Subtotal</span>
                   <span>
-                    $
-                    {subtotal.toFixed(
-                      2
-                    )}
+                    ${subtotal.toFixed(2)}
                   </span>
                 </div>
 
                 <div className="flex justify-between">
+                  <span>Shipping</span>
                   <span>
-                    Shipping
-                  </span>
-
-                  <span>
-                    $
-                    {shippingCharge.toFixed(
-                      2
-                    )}
+                    ${shippingCharge.toFixed(2)}
                   </span>
                 </div>
 
                 <div className="flex justify-between">
                   <span>Tax</span>
-
                   <span>
                     ${tax.toFixed(2)}
                   </span>
@@ -482,23 +488,25 @@ export default function Checkout() {
               </div>
 
               {!user ? (
+
                 <button
                   onClick={login}
                   className="w-full mt-8 bg-orange-500 text-white py-4 rounded-xl font-bold"
                 >
                   Sign In
                 </button>
+
               ) : (
+
                 <button
-                  onClick={
-                    handlePlaceOrder
-                  }
+                  onClick={handlePlaceOrder}
                   disabled={
                     placing ||
                     items.length === 0
                   }
                   className="w-full mt-8 bg-orange-500 text-white py-4 rounded-xl font-bold disabled:opacity-50 flex items-center justify-center gap-2"
                 >
+
                   {placing ? (
                     <Loader2 className="w-5 h-5 animate-spin" />
                   ) : (
@@ -507,17 +515,17 @@ export default function Checkout() {
 
                   {placing
                     ? "Processing..."
-                    : paymentMethod ===
-                      "card"
+                    : paymentMethod === "card"
                     ? "Pay with Stripe"
                     : "Place Order"}
+
                 </button>
               )}
 
               <div className="mt-8 space-y-4">
+
                 <div className="flex items-center gap-2 text-gray-500">
                   <ShieldCheck className="w-5 h-5" />
-
                   <span className="text-sm">
                     Secure Checkout
                   </span>
@@ -525,11 +533,11 @@ export default function Checkout() {
 
                 <div className="flex items-center gap-2 text-gray-500">
                   <Undo2 className="w-5 h-5" />
-
                   <span className="text-sm">
                     Easy Returns
                   </span>
                 </div>
+
               </div>
             </div>
           </aside>
